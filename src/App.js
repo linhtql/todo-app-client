@@ -1,19 +1,33 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import client from "./utils/axiosConfig";
 
 const App = () => {
   const [todos, setTodos] = useState([]);
-  const [todoText, setTodoText] = useState('');
+  const [todoText, setTodoText] = useState("");
+
+  useEffect(() => {
+    client
+      .get("/todos")
+      .then((res) => setTodos(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
   const addTodo = () => {
     if (todoText.trim()) {
-      setTodos([...todos, { id: Date.now(), text: todoText }]);
-      setTodoText('');
+      client
+        .post("/todos", { id: Date.now(), text: todoText })
+        .then((res) => setTodos([...todos, res.data]))
+        .catch((err) => console.error(err));
+      setTodoText("");
     }
   };
 
-  const deleteTodo = id => {
-    setTodos(todos.filter(todo => todo.id !== id));
+  const deleteTodo = (id) => {
+    client
+      .delete(`todos/${id}`)
+      .then(() => setTodos(todos.filter((todo) => todo._id !== id)))
+      .catch((err) => console.error(err));
   };
 
   return (
@@ -24,17 +38,24 @@ const App = () => {
           <input
             type="text"
             value={todoText}
-            onChange={e => setTodoText(e.target.value)}
+            onChange={(e) => setTodoText(e.target.value)}
             placeholder="Enter a new todo..."
             className="input"
           />
-          <button onClick={addTodo} className="add-button">Add Todo</button>
+          <button onClick={addTodo} className="add-button">
+            Add Todo
+          </button>
         </div>
         <ul className="todo-list">
-          {todos.map(todo => (
-            <li key={todo.id} className="todo-item">
+          {todos.map((todo) => (
+            <li key={todo._id} className="todo-item">
               {todo.text}
-              <button onClick={() => deleteTodo(todo.id)} className="delete-button">Delete</button>
+              <button
+                onClick={() => deleteTodo(todo._id)}
+                className="delete-button"
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>
